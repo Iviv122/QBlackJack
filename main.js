@@ -1,4 +1,22 @@
 // https://d33kshant.github.io/blog/implementing-q-learning-from-scratch/
+
+function sfc32(a, b, c, d) {
+  return function () {
+    a |= 0;
+    b |= 0;
+    c |= 0;
+    d |= 0;
+    let t = (((a + b) | 0) + d) | 0;
+    d = (d + 1) | 0;
+    a = b ^ (b >>> 9);
+    b = (c + (c << 3)) | 0;
+    c = (c << 21) | (c >>> 11);
+    c = (c + t) | 0;
+    return (t >>> 0) / 4294967296;
+  };
+}
+const getRand = sfc32(2177591200, 398881965, 2286335670, 118324663);
+
 class Game {
   dealer = [];
   player = [];
@@ -24,7 +42,7 @@ class Game {
     };
   }
   draw(arr) {
-    let val = Math.round(Math.random() * 9) + 1;
+    let val = Math.round(getRand() * 9) + 1;
     if (val === 1) {
       val = "ace";
     }
@@ -98,7 +116,7 @@ class Game {
 const g = new Game();
 
 const ALPHA = 0.1; // aka learning rate
-const GAMMA = 0.9; // aka how improtant current progress
+const GAMMA = 0.2; // aka how improtant current progress
 //
 // smaller alpha -> exploration
 // bigger aplha -> explotation
@@ -121,8 +139,8 @@ class Client {
 
   get_action(state) {
     let state_key = JSON.stringify(state);
-    if (Math.random() < this.epsilon) {
-      return Math.floor(Math.random() * this.actions.length);
+    if (getRand() < this.epsilon) {
+      return Math.floor(getRand() * this.actions.length);
     } else {
       let ans = {
         val: -10,
@@ -203,7 +221,7 @@ const rwin_losses_array = [];
 for (let i = 0; i < EPISODES; i++) {
   g.init();
   while (g.end_rest === undefined) {
-    if (Math.random() > 0.5) {
+    if (getRand() > 0.5) {
       g.hit();
     } else {
       g.stick();
@@ -228,96 +246,140 @@ console.log("Total ties: ", ties);
 console.log("Random win rate:", (wins / EPISODES) * 100, "%");
 console.log("Random 'good' rate:", ((wins + ties) / EPISODES) * 100, "%");
 
-const ctx = document.getElementById("QwinRate");
-const labels = win_array.map((_, i) => ((i + 1) * 100).toString());
-new Chart(ctx, {
-  type: "line",
-  data: {
-    labels: labels,
-    datasets: [
-      {
-        label: "Win/episodes",
-        data: win_array,
-        fill: false,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0,
-      },
-      {
-        label: "Win/Losses",
-        data: win_losses_array,
-        fill: false,
-        borderColor: "rgb(54, 162, 235)",
-        tension: 0,
-      },
-    ],
-  },
-  options: {
-    plugins: {
-      title: {
-        display: true,
-        text: "Q-learning approach",
-      },
+const QChart = () => {
+  const ctx = document.getElementById("QwinRate");
+  const labels = win_array.map((_, i) => ((i + 1) * 100).toString());
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Win/episodes",
+          data: win_array,
+          fill: false,
+          borderColor: "rgb(75, 192, 192)",
+          tension: 0,
+        },
+        {
+          label: "Win/Losses",
+          data: win_losses_array,
+          fill: false,
+          borderColor: "rgb(54, 162, 235)",
+          tension: 0,
+        },
+      ],
     },
-    scales: {
-      y: {
+    options: {
+      plugins: {
         title: {
           display: true,
-          text: "Rate from 0 to 1",
+          text: "Q-learning approach",
         },
-        min: 0,
-        max: 1,
-        ticks: {
-          // forces step size to be 50 units
-          stepSize: 50,
+      },
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: "Rate from 0 to 1",
+          },
+          min: 0,
+          max: 1,
+          ticks: {
+            // forces step size to be 50 units
+            stepSize: 50,
+          },
         },
       },
     },
-  },
-});
+  });
+};
+QChart();
+const RChart = () => {
+  const rctx = document.getElementById("RwinRate");
+  const rlabels = win_array.map((_, i) => ((i + 1) * 100).toString());
+  new Chart(rctx, {
+    type: "line",
+    data: {
+      labels: rlabels,
+      datasets: [
+        {
+          label: "Win/episodes",
+          data: rwin_array,
+          fill: false,
+          borderColor: "rgb(75, 192, 192)",
+          tension: 0,
+        },
+        {
+          label: "Win/Losses",
+          data: rwin_losses_array,
+          fill: false,
+          borderColor: "rgb(54, 162, 235)",
+          tension: 0,
+        },
+      ],
+    },
+    options: {
+      plugins: {
+        title: {
+          display: true,
+          text: "Random step approach",
+        },
+      },
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: "Rate from 0 to 1",
+          },
+          min: 0,
+          max: 1,
+          ticks: {
+            // forces step size to be 50 units
+            stepSize: 50,
+          },
+        },
+      },
+    },
+  });
+};
+RChart();
 
-const rctx = document.getElementById("RwinRate");
-const rlabels = win_array.map((_, i) => ((i + 1) * 100).toString());
-new Chart(rctx, {
-  type: "line",
-  data: {
-    labels: rlabels,
-    datasets: [
-      {
-        label: "Win/episodes",
-        data: rwin_array,
-        fill: false,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0,
-      },
-      {
-        label: "Win/Losses",
-        data: rwin_losses_array,
-        fill: false,
-        borderColor: "rgb(54, 162, 235)",
-        tension: 0,
-      },
-    ],
-  },
-  options: {
-    plugins: {
-      title: {
-        display: true,
-        text: "Random step approach",
-      },
-    },
-    scales: {
-      y: {
-        title: {
-          display: true,
-          text: "Rate from 0 to 1",
-        },
-        min: 0,
-        max: 1,
-        ticks: {
-          // forces step size to be 50 units
-          stepSize: 50,
-        },
-      },
-    },
-  },
-});
+// game tries, no learning
+
+const dealerL = document.getElementById("dealer");
+const aiL = document.getElementById("ai");
+const result = document.getElementById("result");
+
+const play = () => {
+  console.log("Game started");
+  g.init();
+  result.innerHTML = "";
+  dealerL.innerHTML = g.dealer[0] + " unknown";
+  aiL.innerHTML = g.player.map((i, _) => " " + i.toString() + " ");
+  setTimeout(step, 1000);
+};
+const step = () => {
+  aiL.innerHTML = g.player.map((i, _) => " " + i.toString() + " ");
+  if (g.end_rest == 1) {
+    result.innerHTML = "AI won";
+    dealerL.innerHTML = g.dealer.map((i, _) => " " + i.toString() + " ");
+    return;
+  } else if (g.end_rest == 0) {
+    result.innerHTML = "Tie";
+    dealerL.innerHTML = g.dealer.map((i, _) => " " + i.toString() + " ");
+    return;
+  } else if (g.end_rest == -1) {
+    result.innerHTML = "Dealer Won";
+    dealerL.innerHTML = g.dealer.map((i, _) => " " + i.toString() + " ");
+    return;
+  }
+
+  let state = g.getState();
+  let action = agent.get_action(state);
+  agent.actions[action]();
+
+  aiL.innerHTML = g.player.map((i, _) => " " + i.toString() + " ");
+  setTimeout(step, 1000);
+};
+play();
