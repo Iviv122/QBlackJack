@@ -156,6 +156,8 @@ const MIN_EPSILON = 0.01;
 let wins = 0;
 let ties = 0;
 let loses = 0;
+const win_array = [];
+const win_losses_array = [];
 
 for (let i = 0; i < EPISODES; i++) {
   g.init();
@@ -164,7 +166,7 @@ for (let i = 0; i < EPISODES; i++) {
   while (g.end_rest === undefined) {
     let action = agent.get_action(state);
     agent.actions[action]();
-    let next_state = g.getState(); // TODO???
+    let next_state = g.getState();
     let reward = 0;
     if (g.end_rest !== undefined) {
       reward += g.end_rest;
@@ -180,6 +182,10 @@ for (let i = 0; i < EPISODES; i++) {
   } else {
     loses++;
   }
+  if ((i + 1) % 100 === 0) {
+    win_array.push(wins / i);
+    win_losses_array.push(wins / loses);
+  }
   agent.epsilon = Math.max(MIN_EPSILON, agent.epsilon * EPSILON_DECAY); // less random
 }
 
@@ -188,10 +194,12 @@ console.log("Total loses: ", loses);
 console.log("Total ties: ", ties);
 console.log("win rate:", (wins / EPISODES) * 100, "%");
 console.log("'good' rate:", ((wins + ties) / EPISODES) * 100, "%");
-
 wins = 0;
 ties = 0;
 loses = 0;
+
+const rwin_array = [];
+const rwin_losses_array = [];
 for (let i = 0; i < EPISODES; i++) {
   g.init();
   while (g.end_rest === undefined) {
@@ -208,6 +216,10 @@ for (let i = 0; i < EPISODES; i++) {
   } else {
     loses++;
   }
+  if ((i + 1) % 100 === 0) {
+    rwin_array.push(wins / i);
+    rwin_losses_array.push(wins / loses);
+  }
 }
 
 console.log("Total wins: ", wins);
@@ -215,3 +227,97 @@ console.log("Total loses: ", loses);
 console.log("Total ties: ", ties);
 console.log("Random win rate:", (wins / EPISODES) * 100, "%");
 console.log("Random 'good' rate:", ((wins + ties) / EPISODES) * 100, "%");
+
+const ctx = document.getElementById("QwinRate");
+const labels = win_array.map((_, i) => ((i + 1) * 100).toString());
+new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        label: "Win/episodes",
+        data: win_array,
+        fill: false,
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0,
+      },
+      {
+        label: "Win/Losses",
+        data: win_losses_array,
+        fill: false,
+        borderColor: "rgb(54, 162, 235)",
+        tension: 0,
+      },
+    ],
+  },
+  options: {
+    plugins: {
+      title: {
+        display: true,
+        text: "Q-learning approach",
+      },
+    },
+    scales: {
+      y: {
+        title: {
+          display: true,
+          text: "Rate from 0 to 1",
+        },
+        min: 0,
+        max: 1,
+        ticks: {
+          // forces step size to be 50 units
+          stepSize: 50,
+        },
+      },
+    },
+  },
+});
+
+const rctx = document.getElementById("RwinRate");
+const rlabels = win_array.map((_, i) => ((i + 1) * 100).toString());
+new Chart(rctx, {
+  type: "line",
+  data: {
+    labels: rlabels,
+    datasets: [
+      {
+        label: "Win/episodes",
+        data: rwin_array,
+        fill: false,
+        borderColor: "rgb(75, 192, 192)",
+        tension: 0,
+      },
+      {
+        label: "Win/Losses",
+        data: rwin_losses_array,
+        fill: false,
+        borderColor: "rgb(54, 162, 235)",
+        tension: 0,
+      },
+    ],
+  },
+  options: {
+    plugins: {
+      title: {
+        display: true,
+        text: "Random step approach",
+      },
+    },
+    scales: {
+      y: {
+        title: {
+          display: true,
+          text: "Rate from 0 to 1",
+        },
+        min: 0,
+        max: 1,
+        ticks: {
+          // forces step size to be 50 units
+          stepSize: 50,
+        },
+      },
+    },
+  },
+});
