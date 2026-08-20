@@ -9,13 +9,29 @@
                 <canvas id="RwinRate"></canvas>
             </div>
         </div>
-        <h1>Play with</h1>
-        <p><span>Dealer: </span><span id="dealer"></span></p>
-        <p><span>AI: </span><span id="ai"></span></p>
-        <p><span>Result: </span><span id="result"></span></p>
-        <div>
-            <button onclick="play()">New game</button>
-            <button onclick="step()">Step</button>
+        <div style="display: flex; justify-content: space-around">
+            <div>
+                <h1>Play with trained ai</h1>
+                <p><span>Dealer: </span><span id="dealer"></span></p>
+                <p><span>AI: </span><span id="ai"></span></p>
+                <p><span>Result: </span><span id="result"></span></p>
+                <p><span>session stats: </span><span id="stats"></span></p>
+                <div>
+                    <button onclick="play()">New game</button>
+                </div>
+            </div>
+            <div>
+                <h1>Play against dealer</h1>
+                <p><span>Dealer: </span><span id="pdealer"></span></p>
+                <p><span>Player: </span><span id="pplayer"></span></p>
+                <p><span>Result: </span><span id="presult"></span></p>
+                <p><span>session stats: </span><span id="pstats"></span></p>
+                <div>
+                    <button onclick="hit()">Hit</button>
+                    <button onclick="stick()">Stick</button>
+                    <button onclick="newGame()">New game</button>
+                </div>
+            </div>
         </div>
     </head>
     <body>

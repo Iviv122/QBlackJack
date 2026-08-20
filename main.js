@@ -38,7 +38,7 @@ class Game {
   getState() {
     return {
       player: this.returnSum(this.player),
-      dealer: this.returnSum(this.dealer),
+      dealer: this.dealer[0],
     };
   }
   draw(arr) {
@@ -350,28 +350,57 @@ RChart();
 const dealerL = document.getElementById("dealer");
 const aiL = document.getElementById("ai");
 const result = document.getElementById("result");
+const stats = document.getElementById("stats");
+
+let ai_wins = 0;
+let dealer_wins = 0;
+let ties_wins = 0;
+let gameTimer = null;
+let autoPlay = true;
 
 const play = () => {
+  if (gameTimer !== null) {
+    clearTimeout(gameTimer);
+    gameTimer = null;
+  }
   console.log("Game started");
   g.init();
   result.innerHTML = "";
   dealerL.innerHTML = g.dealer[0] + " unknown";
-  aiL.innerHTML = g.player.map((i, _) => " " + i.toString() + " ");
-  setTimeout(step, 1000);
+  aiL.innerHTML =
+    g.player.map((i, _) => " " + i.toString() + " ") +
+    " | sum: " +
+    g.returnSum(g.player).sum;
+  stats.innerHTML = `AI: ${ai_wins} | Dealer: ${dealer_wins} | Ties : ${ties_wins}`;
+  gameTimer = setTimeout(step, 1000);
 };
+
+const print_stats = () => {
+  stats.innerHTML = `AI: ${ai_wins} | Dealer: ${dealer_wins} | Ties : ${ties_wins}`;
+};
+
 const step = () => {
-  aiL.innerHTML = g.player.map((i, _) => " " + i.toString() + " ");
-  if (g.end_rest == 1) {
-    result.innerHTML = "AI won";
-    dealerL.innerHTML = g.dealer.map((i, _) => " " + i.toString() + " ");
-    return;
-  } else if (g.end_rest == 0) {
-    result.innerHTML = "Tie";
-    dealerL.innerHTML = g.dealer.map((i, _) => " " + i.toString() + " ");
-    return;
-  } else if (g.end_rest == -1) {
-    result.innerHTML = "Dealer Won";
-    dealerL.innerHTML = g.dealer.map((i, _) => " " + i.toString() + " ");
+  if (g.end_rest !== undefined) {
+    if (g.end_rest == 1) {
+      result.innerHTML = "AI won";
+      ai_wins++;
+    } else if (g.end_rest == 0) {
+      result.innerHTML = "Tie";
+      ties_wins++;
+    } else if (g.end_rest == -1) {
+      result.innerHTML = "Dealer Won";
+      dealer_wins++;
+      dealerL.innerHTML = g.dealer.map((i, _) => " " + i.toString() + " ");
+    }
+
+    dealerL.innerHTML =
+      g.dealer.map((i, _) => " " + i.toString() + " ") +
+      " | sum: " +
+      g.returnSum(g.dealer).sum;
+    print_stats();
+    if (autoPlay) {
+      gameTimer = setTimeout(play, 2000);
+    }
     return;
   }
 
@@ -379,7 +408,76 @@ const step = () => {
   let action = agent.get_action(state);
   agent.actions[action]();
 
-  aiL.innerHTML = g.player.map((i, _) => " " + i.toString() + " ");
-  setTimeout(step, 1000);
+  aiL.innerHTML =
+    g.player.map((i, _) => " " + i.toString() + " ") +
+    " | sum: " +
+    g.returnSum(g.player).sum;
+  gameTimer = setTimeout(step, 1000);
 };
 play();
+
+let player_wins = 0;
+let player_dealer = 0;
+let player_ties = 0;
+const g1 = new Game();
+
+const pdealer = document.getElementById("pdealer");
+const pplayer = document.getElementById("pplayer");
+const presult = document.getElementById("presult");
+const pstats = document.getElementById("pstats");
+
+const redraw = () => {
+  pdealer.innerHTML = g1.dealer[0] + " uknown";
+  pplayer.innerHTML =
+    g1.player.map((i) => ` ${i.toString()} `) +
+    ` | ${g1.returnSum(g1.player).sum}`;
+  presult.innerHTML = "";
+};
+const stick = () => {
+  if (g1.end_rest !== undefined) {
+    end();
+    return;
+  }
+  g1.stick();
+  redraw();
+  if (g1.end_rest !== undefined) {
+    end();
+    return;
+  }
+};
+const hit = () => {
+  if (g1.end_rest !== undefined) {
+    end();
+    return;
+  }
+  g1.hit();
+  redraw();
+  if (g1.end_rest !== undefined) {
+    end();
+    return;
+  }
+};
+const end = () => {
+  if (presult.innerHTML) {
+    return;
+  }
+  pdealer.innerHTML =
+    g1.dealer.map((i) => ` ${i.toString()} `) +
+    ` | ${g1.returnSum(g1.dealer).sum}`;
+  if (g1.end_rest == 1) {
+    presult.innerHTML = "AI won";
+    player_wins++;
+  } else if (g1.end_rest == 0) {
+    presult.innerHTML = "Tie";
+    player_ties++;
+  } else if (g1.end_rest == -1) {
+    presult.innerHTML = "Dealer Won";
+    player_dealer++;
+  }
+  pstats.innerHTML = `Player: ${player_wins} | Dealer: ${player_dealer} | Ties: ${player_ties}`;
+};
+const newGame = () => {
+  g1.init();
+  redraw();
+};
+newGame();
